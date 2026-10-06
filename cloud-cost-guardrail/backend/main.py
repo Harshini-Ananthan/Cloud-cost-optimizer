@@ -77,3 +77,32 @@ def get_forecast(days: int = 30):
         return forecasts
     except Exception as e:
         return {"error": str(e)}
+
+@app.get("/api/recommendations")
+def get_recommendations(limit: int = 50):
+    from .recommendation_service import RecommendationService
+    try:
+        service = RecommendationService()
+        return service.get_recommendations(limit=limit)
+    except Exception as e:
+        return {"error": str(e)}
+
+from pydantic import BaseModel
+from typing import Dict, Any
+
+class WhatIfRequest(BaseModel):
+    baseline: Dict[str, float]
+    modifications: Dict[str, float]
+
+@app.post("/api/what-if")
+def post_what_if(request: WhatIfRequest):
+    from .what_if_service import WhatIfService
+    try:
+        service = WhatIfService()
+        return service.simulate(request.baseline, request.modifications)
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/api/what-if")
+def get_what_if():
+    return {"message": "Please use POST /api/what-if to submit baseline and modifications for simulation."}
