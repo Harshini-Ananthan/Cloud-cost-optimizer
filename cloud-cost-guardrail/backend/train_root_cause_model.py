@@ -29,8 +29,8 @@ def train_and_predict(input_csv, output_csv, model_dir):
     
     X = X.fillna(X.median())
     
-    print("Splitting data into train and test sets...")
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    print("Splitting data into train and test sets (chronological to avoid data leakage)...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
     
     print("Training Random Forest Classifier...")
     rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -51,6 +51,11 @@ def train_and_predict(input_csv, output_csv, model_dir):
     print(f"F1-score:  {f1:.4f}")
     print("Confusion Matrix:")
     print(cm)
+    
+    print("\nFeature Importance:")
+    importances = rf_model.feature_importances_
+    for feature, imp in zip(features, importances):
+        print(f"{feature}: {imp:.4f}")
     
     print(f"Saving model to {model_dir}...")
     os.makedirs(model_dir, exist_ok=True)
