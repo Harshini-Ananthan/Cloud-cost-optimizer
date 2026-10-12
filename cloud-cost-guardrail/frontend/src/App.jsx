@@ -1,15 +1,54 @@
-import { useState, useEffect } from 'react'
-import './App.css'
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import './App.css';
+import DashboardCards from './components/DashboardCards';
+import Charts from './components/Charts';
+import Recommendations from './components/Recommendations';
+import WhatIfSimulator from './components/WhatIfSimulator';
+import { Activity, AlertTriangle, ShieldCheck, Loader2 } from 'lucide-react';
+
+const API_BASE = 'http://localhost:8000/api';
 
 function App() {
-  const [backendStatus, setBackendStatus] = useState({ status: 'checking', message: 'Connecting to backend...' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState({
+    health: null,
+    anomalies: [],
+    rootCauses: [],
+    forecast: [],
+    recommendations: []
+  });
 
   useEffect(() => {
-    // Check backend health
-    fetch('http://localhost:8000/api/health')
-      .then(res => res.json())
-      .then(data => setBackendStatus({ status: 'connected', message: data.message }))
-      .catch(err => setBackendStatus({ status: 'error', message: 'Failed to connect to backend.' }));
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [healthRes, anomaliesRes, rootCausesRes, forecastRes, recsRes] = await Promise.all([
+          axios.get(`${API_BASE}/health`),
+          axios.get(`${API_BASE}/anomalies?limit=30`),
+          axios.get(`${API_BASE}/root-causes?limit=30`),
+          axios.get(`${API_BASE}/forecast?days=14`),
+          axios.get(`${API_BASE}/recommendations?limit=10`)
+        ]);
+
+        setData({
+          health: healthRes.data,
+          anomalies: anomaliesRes.data,
+          rootCauses: rootCausesRes.data,
+          forecast: forecastRes.data,
+          recommendations: recsRes.data
+        });
+        setError(null);
+      } catch (err) {
+        console.error(err);
+        setError('Failed to fetch dashboard data. Please ensure the backend is running.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
@@ -20,45 +59,44 @@ function App() {
       </div>
       
       <main className="content">
-        <header className="hero">
-          <div className="badge">Phase 1 Complete</div>
-          <h1 className="title">Cloud Cost Guardrail</h1>
-          <p className="subtitle">
-            AI-Based Cloud Cost Root Cause Analyzer and Optimization Recommender
-          </p>
-          
-          <div className={`status-card ${backendStatus.status}`}>
-            <div className="status-indicator">
-              <span className="pulse-ring"></span>
-              <span className="pulse-dot"></span>
-            </div>
-            <div className="status-text">
-              <h3>Backend Status: {backendStatus.status.toUpperCase()}</h3>
-              <p>{backendStatus.message}</p>
-            </div>
+        <header className="dashboard-header">
+          <div>
+            <h1 className="title">Cloud Cost Guardrail</h1>
+            <p className="subtitle">AI-Driven Cost Intelligence & Optimization</p>
+          </div>
+          <div className={`status-badge ${data.health ? 'connected' : error ? 'error' : 'checking'}`}>
+            {data.health ? <ShieldCheck size={20} /> : error ? <AlertTriangle size={20} /> : <Activity size={20} className="spin" />}
+            <span>{data.health ? 'System Active' : error ? 'System Offline' : 'Connecting...'}</span>
           </div>
         </header>
 
-        <section className="features-grid">
-          <div className="feature-card">
-            <div className="icon">📊</div>
-            <h3>Intelligent Analytics</h3>
-            <p>Processing over 10,000+ realistic AWS-like usage records to discover hidden cost patterns.</p>
+        {loading ? (
+          <div className="loading-state">
+            <Loader2 className="spin loader-icon" size={48} />
+            <p>Analyzing cloud patterns & generating insights...</p>
           </div>
-          <div className="feature-card">
-            <div className="icon">🔍</div>
-            <h3>Root Cause Detection</h3>
-            <p>Identifying anomalies like Idle Resources, Storage Growth, and Database Load dynamically.</p>
+        ) : error ? (
+          <div className="error-state">
+            <AlertTriangle size={48} />
+            <h3>Connection Error</h3>
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()} className="retry-btn">Retry Connection</button>
           </div>
-          <div className="feature-card">
-            <div className="icon">💡</div>
-            <h3>Actionable Insights</h3>
-            <p>Preparing the foundation for ML-driven optimization recommendations.</p>
+        ) : (
+          <div className="dashboard-grid">
+            <DashboardCards data={data} />
+            <div className="charts-section">
+              <Charts data={data} />
+            </div>
+            <div className="bottom-section">
+              <Recommendations recommendations={data.recommendations} />
+              <WhatIfSimulator />
+            </div>
           </div>
-        </section>
+        )}
       </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

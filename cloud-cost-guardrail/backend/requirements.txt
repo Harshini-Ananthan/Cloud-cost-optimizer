@@ -9,3 +9,5 @@ scikit-learn
 joblib
 matplotlib
 seaborn
+python-dotenv
+pydantic-settings

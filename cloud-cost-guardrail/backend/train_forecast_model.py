@@ -23,6 +23,13 @@ def train_forecast_model(input_csv, model_dir):
     model = LinearRegression()
     model.fit(X, y)
     
+    from sklearn.metrics import mean_absolute_error, mean_squared_error
+    y_pred = model.predict(X)
+    mae = mean_absolute_error(y, y_pred)
+    rmse = np.sqrt(mean_squared_error(y, y_pred))
+    print(f"MAE: {mae:.2f}")
+    print(f"RMSE: {rmse:.2f}")
+    
     os.makedirs(model_dir, exist_ok=True)
     model_path = os.path.join(model_dir, 'forecast_model.joblib')
     joblib.dump(model, model_path)
