@@ -1,0 +1,10 @@
+{
+  "billing_account_id": "01A4B8-92FE31-77CC90",
+  "gcp_project_id": "gcp-developer-project",
+  "bigquery_dataset": "billing_export",
+  "bigquery_table": "gcp_billing_export_v1_01A4B8_92FE31_77CC90",
+  "credentials_path": "",
+  "is_live_bigquery_connected": false,
+  "currency": "INR",
+  "last_synced_at": "2026-10-27T15:04:36.445577"
+}

@@ -5,6 +5,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
+import sys
+from pathlib import Path
+
+# Ensure backend directory is in sys.path
+backend_dir = Path(__file__).resolve().parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+
 from routers.api import router as api_router
 from dependencies import load_all_models
 
